@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from database import db
 from models.user import UserCreate , UserLogin
 from utils.auth import create_access_token, hash_password, verify_password
+from datetime import datetime
 
 router = APIRouter()
 
@@ -13,8 +14,10 @@ async def signup(user:UserCreate):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed = hash_password(user.password)
-    user_dict= user.dict( )
-    user_dict["password"]= hashed
+    user_dict = user.model_dump()
+    user_dict["password"] = hashed
+    user_dict["is_active"] = True           
+    user_dict["created_at"] = datetime.utcnow()
     
     result= await db["users"].insert_one(user_dict)
     return {
