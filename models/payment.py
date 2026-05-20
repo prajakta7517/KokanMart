@@ -15,6 +15,7 @@ class PaymentResponse(BaseModel):
     razorpay_order_id: str
     amount: float
     currency: str
+    
     status: str
     method: Optional[str] = None
     created_at: datetime

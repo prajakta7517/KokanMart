@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routes import products
 from routes import auth
 
 
@@ -16,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(products.router, prefix="/products", tags=["Products"])
 
 @app.get("/")
 async def home():

@@ -30,11 +30,11 @@ async def signup(user:UserCreate):
 async def login(user:UserLogin):
     existing_user= await db["users"].find_one({"email":user.email})
     if not existing_user:
-        raise HTTPException(status_code=400, detail="Invalid email")
+        raise HTTPException(status_code=400, detail="Invalid credentials")
     
     
     if not verify_password(user.password, existing_user["password"]):
-        raise HTTPException(status_code=400, detail="Invalid password")
+        raise HTTPException(status_code=400, detail="Invalid credentials")
     
     token = create_access_token({"sub": str(existing_user["_id"]), "role": existing_user["role"]})
     
