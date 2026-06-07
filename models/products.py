@@ -11,7 +11,8 @@ class ProductCreate(BaseModel):
     price_per_unit: float
     is_seasonal: bool = False
     season_start: Optional[int] = None   
-    season_end: Optional[int] = None     
+    season_end: Optional[int] = None   
+    image_url: Optional[str] = None  
 
 class ProductResponse(BaseModel):
     id: str
@@ -33,3 +34,4 @@ class ProductUpdate(BaseModel):
     is_available: Optional[bool] = None
     season_start: Optional[int] = None
     season_end: Optional[int] = None
+    image_url: Optional[str] = None
