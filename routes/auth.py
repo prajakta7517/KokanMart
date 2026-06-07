@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from database import db
 from models.user import UserCreate , UserLogin
-from utils.auth import create_access_token, hash_password, verify_password
+from utils.auth import create_access_token, hash_password, verify_password, get_current_user
 from utils.email import send_reset_email
 from models.user import ForgotPassword, ResetPassword
 import secrets
@@ -94,3 +94,43 @@ async def reset_password(data: ResetPassword):
     )
     
     return {"message": "Password reset successful! Please login."}
+
+
+@router.get("/me")
+async def get_current_user_profile(user=Depends(get_current_user)):
+    user_dict = {
+        "id": str(user["_id"]),
+        "name": user["name"],
+        "email": user["email"],
+        "phone": user["phone"],
+        "role": user["role"],
+        "is_active": user["is_active"],
+        "created_at": user["created_at"]
+    }
+    return {"user": user_dict}
+
+
+@router.put("/profile")
+async def update_profile(data: dict, user=Depends(get_current_user)):
+    update_data = {k: v for k, v in data.items() if v is not None and k not in ["_id", "role", "created_at"]}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+    
+    await db["users"].update_one(
+        {"_id": user["_id"]},
+        {"$set": update_data}
+    )
+    
+    updated_user = await db["users"].find_one({"_id": user["_id"]})
+    user_dict = {
+        "id": str(updated_user["_id"]),
+        "name": updated_user["name"],
+        "email": updated_user["email"],
+        "phone": updated_user["phone"],
+        "role": updated_user["role"],
+        "is_active": updated_user["is_active"],
+        "created_at": updated_user["created_at"]
+    }
+    
+    return {"message": "Profile updated successfully!", "user": user_dict}

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.auth import router as auth_router
 from routes.products import router as products_router
 from routes.order import router as orders_router
+from routes.payment import router as payment_router
 from database import db
 from utils.auth import hash_password
 from datetime import datetime
@@ -26,6 +27,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(products_router, prefix="/products", tags=["Products"])
 app.include_router(orders_router, prefix="/orders", tags=["Orders"])
+app.include_router(payment_router, prefix="/payments", tags=["Payments"])
 
 def generate_password(length: int = 12) -> str:
     characters = string.ascii_letters + string.digits + string.punctuation

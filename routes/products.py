@@ -12,7 +12,7 @@ router = APIRouter()
 @router.post("/create_product")
 async def create_product(
     product: ProductCreate,
-    # user=Depends(required_role("admin"))
+    user=Depends(required_role("admin"))
 ):
     existing_product = await db["products"].find_one({"name": product.name})
     if existing_product:
@@ -34,7 +34,7 @@ async def create_product(
 async def upload_product_image(
     product_id: str,
     image: UploadFile = File(...),
-    # user=Depends(required_role("admin"))
+    user=Depends(required_role("admin"))
 ):
     try:
         obj_id = ObjectId(product_id)
@@ -65,6 +65,12 @@ async def get_all_products():
         p["id"] = str(p["_id"])
         del p["_id"]
     return {"products": products}
+
+
+@router.get("/categories")
+async def get_categories():
+    categories = await db["products"].distinct("category")
+    return {"categories": categories}
 
 
 @router.get("/{product_id}")
