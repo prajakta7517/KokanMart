@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from database import db
 from models.products import ProductCreate, ProductUpdate
 from utils.auth import required_role
+from utils.cloudinary_config import upload_image
 from datetime import datetime
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -11,7 +12,7 @@ router = APIRouter()
 @router.post("/create_product")
 async def create_product(
     product: ProductCreate,
-    user=Depends(required_role("admin"))
+    # user=Depends(required_role("admin"))
 ):
     existing_product = await db["products"].find_one({"name": product.name})
     if existing_product:
@@ -27,6 +28,34 @@ async def create_product(
     del created_product["_id"]
 
     return {"message": "Product created successfully!", "product": created_product}
+
+
+@router.post("/{product_id}/image")
+async def upload_product_image(
+    product_id: str,
+    image: UploadFile = File(...),
+    # user=Depends(required_role("admin"))
+):
+    try:
+        obj_id = ObjectId(product_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid product ID format")
+
+    existing_product = await db["products"].find_one({"_id": obj_id})
+    if not existing_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    image_url = await upload_image(image)
+
+    await db["products"].update_one(
+        {"_id": obj_id},
+        {"$set": {"image_url": image_url}}
+    )
+
+    return {
+        "message": "Image uploaded successfully!",
+        "image_url": image_url
+    }
 
 
 @router.get("/get_all_products")
@@ -57,11 +86,11 @@ async def get_product(product_id: str):
 @router.put("/update_product/{product_id}")
 async def update_product(
     product_id: str,
-    product: ProductCreate,
+    product: ProductUpdate,
     user=Depends(required_role("admin"))
 ):
     try:
-        obj_id = ObjectId(product_id)   
+        obj_id = ObjectId(product_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid product ID format")
 
@@ -69,12 +98,20 @@ async def update_product(
     if not existing_product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    updated_data = product.model_dump()
+    updated_data = {
+        k: v for k, v in product.model_dump().items()
+        if v is not None
+    }
+
+    if not updated_data:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+
     await db["products"].update_one({"_id": obj_id}, {"$set": updated_data})
 
     updated_product = await db["products"].find_one({"_id": obj_id})
     updated_product["id"] = str(updated_product["_id"])
     del updated_product["_id"]
+
     return {"message": "Product updated successfully!", "product": updated_product}
 
 
@@ -84,7 +121,7 @@ async def delete_product(
     user=Depends(required_role("admin"))
 ):
     try:
-        obj_id = ObjectId(product_id)   
+        obj_id = ObjectId(product_id)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid product ID format")
 
@@ -94,5 +131,3 @@ async def delete_product(
 
     await db["products"].delete_one({"_id": obj_id})
     return {"message": "Product deleted successfully!"}
-
-

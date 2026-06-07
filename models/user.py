@@ -21,3 +21,11 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
     created_at: datetime
+    
+
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+class ResetPassword(BaseModel):
+    token: str
+    new_password: str

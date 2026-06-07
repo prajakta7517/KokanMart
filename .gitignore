@@ -116,7 +116,6 @@ ipython_config.py
 # pdm.toml
 .pdm-python
 .pdm-build/
-
 # pixi
 #   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
 # pixi.lock
@@ -149,6 +148,7 @@ activemq-data/
 
 # Environments
 .env
+admin_credentials.txt
 .envrc
 .venv
 /env/
